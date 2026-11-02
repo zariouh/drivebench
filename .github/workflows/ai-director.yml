@@ -1,0 +1,85 @@
+name: AI Director - Auto Code & Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Instructions for Gemini (e.g. Implement Fixes A, B, and C)'
+        required: true
+        default: 'Implement Fixes A, B, and C in SessionCoordinator.cs, Admission.cs, and SenderHealth.kt'
+
+jobs:
+  ai-code-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Gemini SDK
+        run: pip install google-genai
+
+      - name: Run Gemini Coder Script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          USER_PROMPT: ${{ github.event.inputs.prompt }}
+        run: |
+          python -c "
+          import os, glob
+          from google import genai
+
+          client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+          prompt = os.environ['USER_PROMPT']
+
+          # Collect codebase context from key source files
+          code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True)
+          context = ''
+          for filepath in code_files:
+              if '.github' not in filepath and 'build' not in filepath:
+                  with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                      context += f'\n--- FILE: {filepath} ---\n' + f.read()
+
+          full_prompt = f'''You are an expert C# and Kotlin developer modifying DriveBench.
+          Instructions: {prompt}
+
+          Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
+          Format: {{\"path/to/file\": \"file content...\"}}
+
+          Existing Codebase:
+          {context}'''
+
+          response = client.models.generate_content(
+              model='gemini-2.5-flash',
+              contents=full_prompt
+          )
+
+          # Parse and apply file updates
+          import json, re
+          raw = response.text.strip()
+          if raw.startswith('```'):
+              raw = re.sub(r'^```[a-z]*\n|```$', '', raw, flags=re.MULTILINE).strip()
+          
+          try:
+              files = json.loads(raw)
+              for path, content in files.items():
+                  os.makedirs(os.path.dirname(path), exist_ok=True)
+                  with open(path, 'w', encoding='utf-8') as f:
+                      f.write(content)
+                  print(f'Updated {path}')
+          except Exception as e:
+              print(f'Failed to parse AI output: {e}\nRaw Output:\n{raw}')
+          "
+
+      - name: Commit and Push AI Changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "AI Director: ${{ github.event.inputs.prompt }}"
