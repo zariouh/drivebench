@@ -26,7 +26,8 @@ jobs:
 
       - name: Publish Windows Receiver
         run: |
-          $proj = Get-ChildItem -Recurse -Filter *.csproj | Select-Object -First 1
+          $proj = Get-ChildItem -Recurse -Filter *Receiver.csproj | Select-Object -First 1
+          if (-not $proj) { $proj = Get-ChildItem -Recurse -Filter *.csproj | Select-Object -First 1 }
           if (-not $proj) { Write-Error "No .csproj file found in repository!"; exit 1 }
           dotnet publish $proj.FullName -c Release -r win-x64 --self-contained true -o ./publish/
 
