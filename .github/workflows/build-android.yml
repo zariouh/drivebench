@@ -25,14 +25,17 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Grant Execute Permission for Gradlew
-        run: |
-          if [ -f "android/gradlew" ]; then chmod +x android/gradlew; fi
-          if [ -f "gradlew" ]; then chmod +x gradlew; fi
-
       - name: Build Debug APK
         run: |
-          if [ -d "android" ]; then cd android; fi
+          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
+          if [ -z "$GRADLEW_PATH" ]; then
+            echo "Error: gradlew file not found in repository!"
+            exit 1
+          fi
+          GRADLE_DIR=$(dirname "$GRADLEW_PATH")
+          echo "Found gradlew in $GRADLE_DIR"
+          chmod +x "$GRADLEW_PATH"
+          cd "$GRADLE_DIR"
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
@@ -40,5 +43,4 @@ jobs:
         with:
           name: drivebench-android-apk
           path: |
-            android/app/build/outputs/apk/debug/app-debug.apk
-            app/build/outputs/apk/debug/app-debug.apk
+            **/app/build/outputs/apk/debug/*.apk
