@@ -34,8 +34,15 @@ jobs:
           fi
           GRADLE_DIR=$(dirname "$GRADLEW_PATH")
           echo "Found gradlew in $GRADLE_DIR"
-          chmod +x "$GRADLEW_PATH"
           cd "$GRADLE_DIR"
+          
+          # Fix Windows line endings (CRLF -> LF)
+          sed -i -e 's/\r$//' gradlew
+          chmod +x gradlew
+          
+          # Delete local.properties if it was accidentally zipped from a PC
+          rm -f local.properties
+          
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
