@@ -33,14 +33,13 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           USER_PROMPT: ${{ github.event.inputs.prompt }}
         run: |
-          python -c "
-          import os, glob
+          cat << 'EOF' > run_ai.py
+          import os, glob, json, re
           from google import genai
 
           client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
           prompt = os.environ['USER_PROMPT']
 
-          # Collect codebase context from key source files
           code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True)
           context = ''
           for filepath in code_files:
@@ -48,22 +47,20 @@ jobs:
                   with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                       context += f'\n--- FILE: {filepath} ---\n' + f.read()
 
-          full_prompt = f'''You are an expert C# and Kotlin developer modifying DriveBench.
+          full_prompt = f"""You are an expert C# and Kotlin developer modifying DriveBench.
           Instructions: {prompt}
 
           Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
-          Format: {{\"path/to/file\": \"file content...\"}}
+          Format: {{"path/to/file": "file content..."}}
 
           Existing Codebase:
-          {context}'''
+          {context}"""
 
           response = client.models.generate_content(
               model='gemini-2.5-flash',
               contents=full_prompt
           )
 
-          # Parse and apply file updates
-          import json, re
           raw = response.text.strip()
           if raw.startswith('```'):
               raw = re.sub(r'^```[a-z]*\n|```$', '', raw, flags=re.MULTILINE).strip()
@@ -77,7 +74,8 @@ jobs:
                   print(f'Updated {path}')
           except Exception as e:
               print(f'Failed to parse AI output: {e}\nRaw Output:\n{raw}')
-          "
+          EOF
+          python run_ai.py
 
       - name: Commit and Push AI Changes
         uses: stefanzweifel/git-auto-commit-action@v5
