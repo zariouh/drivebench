@@ -34,7 +34,7 @@ jobs:
           USER_PROMPT: ${{ github.event.inputs.prompt }}
         run: |
           cat << 'EOF' > run_ai.py
-          import os, glob, json, re
+          import os, glob, json, re, time
           from google import genai
 
           client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
@@ -56,10 +56,20 @@ jobs:
           Existing Codebase:
           {context}"""
 
-          response = client.models.generate_content(
-              model='gemini-3.8-flash',
-              contents=full_prompt
-          )
+          response = None
+          for attempt in range(3):
+              try:
+                  response = client.models.generate_content(
+                      model='gemini-3.8-flash',
+                      contents=full_prompt
+                  )
+                  break
+              except Exception as e:
+                  print(f"Attempt {attempt+1} failed: {e}. Retrying in 5 seconds...")
+                  time.sleep(5)
+
+          if not response:
+              raise Exception("Failed to get response from Gemini after 3 attempts.")
 
           raw = response.text.strip()
           if raw.startswith('```'):
