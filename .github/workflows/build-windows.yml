@@ -10,10 +10,17 @@ jobs:
     runs-on: windows-latest
     permissions:
       contents: write
+      actions: write
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Clean Temporary Build Artifacts
+        run: |
+          if (Test-Path "src/DriveBench.Core/obj") { Remove-Item -Recurse -Force "src/DriveBench.Core/obj" }
+          if (Test-Path "src/DriveBench.Receiver/obj") { Remove-Item -Recurse -Force "src/DriveBench.Receiver/obj" }
+          if (Test-Path "src/DriveBench.Transport/obj") { Remove-Item -Recurse -Force "src/DriveBench.Transport/obj" }
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -76,7 +83,7 @@ jobs:
           {error_log}
           =======================
 
-          Fix all compilation errors in the source code (e.g., missing imports, type mismatches).
+          Fix all compilation errors in the source code.
           Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
           Format: {{"path/to/file": "file content..."}}
 
@@ -121,8 +128,5 @@ jobs:
         if: steps.build_step.outcome == 'failure'
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
+          file_pattern: 'src/**/*.cs src/**/*.csproj'
           commit_message: "Auto-Fix (Windows): Resolve build compilation error"
-
-      - name: Fail Job to Trigger Retry
-        if: steps.build_step.outcome == 'failure'
-        run: exit 1
