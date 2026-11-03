@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DriveBench.Core")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+125cd3d96a7bc1fd0b89eef7061e204474b7ee4e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ff4bd7178547ed5d6c5fc4ee89a4e3f2ec74e7bf")]
 [assembly: System.Reflection.AssemblyProductAttribute("DriveBench.Core")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DriveBench.Core")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
