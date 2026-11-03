@@ -62,20 +62,34 @@ jobs:
           Existing Codebase:
           {context}"""
 
+          # Fallback model list directly matched to your available Google AI Studio models
+          models_to_try = [
+              'gemini-3.8-flash',
+              'gemini-3.6-flash',
+              'gemini-3.5-flash-lite',
+              'gemini-3.1-flash-lite',
+              'gemini-3-flash-preview'
+          ]
+
           response = None
-          for attempt in range(3):
-              try:
-                  response = client.models.generate_content(
-                      model='gemini-3.8-flash',
-                      contents=full_prompt
-                  )
+          for model_name in models_to_try:
+              print(f"Attempting code generation with model: {model_name}...")
+              for attempt in range(2):
+                  try:
+                      response = client.models.generate_content(
+                          model=model_name,
+                          contents=full_prompt
+                      )
+                      print(f"Successfully generated response using {model_name}.")
+                      break
+                  except Exception as e:
+                      print(f"[{model_name}] Attempt {attempt+1} failed: {e}")
+                      time.sleep(3)
+              if response:
                   break
-              except Exception as e:
-                  print(f"Attempt {attempt+1} failed: {e}. Retrying in 5 seconds...")
-                  time.sleep(5)
 
           if not response:
-              raise Exception("Failed to get response from Gemini after 3 attempts.")
+              raise Exception("Failed to get a valid response from any available Gemini model after multiple retries.")
 
           raw = response.text.strip()
           if raw.startswith('```'):
