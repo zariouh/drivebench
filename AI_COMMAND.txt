@@ -1,1 +1,1 @@
-Add 'using System;' to the top of src/DriveBench.Core/Protocol.cs to resolve the missing ReadOnlySpan namespace error. Also ensure all .cs files in src/DriveBench.Core have necessary System using directives.
+Add 'using System.IO;' to the top of src/DriveBench.Core/Protocol.cs to resolve the missing InvalidDataException error.
