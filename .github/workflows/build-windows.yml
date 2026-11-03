@@ -155,9 +155,11 @@ jobs:
           # 3. Stage ONLY source code files (.cs and .csproj)
           git add "src/**/*.cs" "src/**/*.csproj"
 
-          # 4. If changes exist, commit, rebase smoothly, and push
+          # 4. If changes exist, commit, wipe working-tree build clutter, rebase, and push
           if ! git diff-index --quiet HEAD; then
             git commit -m "Auto-Fix (Windows): Resolve build compilation error"
+            git reset --hard HEAD
+            git clean -fd
             git pull --rebase origin main
             git push origin main
           else
