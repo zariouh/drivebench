@@ -1,1 +1,3 @@
+Populate android/app/src/main/java/com/drivebench/controller/LinkTiming.kt with a complete class implementation to handle low-latency UDP controller timestamp tracking and timing calculations. Ensure it resides in the package com.drivebench.controller and includes methods for beginArm(), markPoll(), and getElapsedTime().
 
+Next, verify and update PhoneLink.kt and SessionCoordinator.kt so that all calls to LinkTiming, beginArm(), and pause() resolve cleanly without any missing references or compiler errors.
