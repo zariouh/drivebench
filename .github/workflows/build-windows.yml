@@ -13,12 +13,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Auto-Unzip Source If Present
-        run: |
-          if (Test-Path "source.zip") {
-            Expand-Archive -Path "source.zip" -DestinationPath "." -Force
-          }
-
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
@@ -26,10 +20,7 @@ jobs:
 
       - name: Publish Windows Receiver
         run: |
-          $proj = Get-ChildItem -Recurse -Filter *Receiver.csproj | Select-Object -First 1
-          if (-not $proj) { $proj = Get-ChildItem -Recurse -Filter *.csproj | Select-Object -First 1 }
-          if (-not $proj) { Write-Error "No .csproj file found in repository!"; exit 1 }
-          dotnet publish $proj.FullName -c Release -r win-x64 --self-contained true -o ./publish/
+          dotnet publish src/DriveBench.Receiver/DriveBench.Receiver.csproj -c Release -r win-x64 --self-contained true -o ./publish/
 
       - name: Compress Release ZIP
         run: |
