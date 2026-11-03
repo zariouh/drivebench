@@ -1,17 +1,15 @@
-You are an automated C# / .NET bug fixing agent for DriveBench.
+Task: Apply three specific architectural and build fixes to the DriveBench repository to resolve the Android pairing JSON exception, the missing QRCoder reference, and the missing Host backend executable in the Windows build.
 
-Context:
-The Android client fails during TCP/TLS pairing setup with the following runtime error:
-"SESSION_SETUP: JSONException: No value for inputBytes"
+1. Fix Android Pairing (JSON Serialization Casing):
+   In `src/DriveBench.Transport/RemoteReceiver.cs`, locate the TCP session setup JSON response sent back to the phone during pairing (the payload containing status, sessionKey, inputPort, sequence). Ensure the response object serializes keys in strict `lowerCamelCase` so that the property `inputBytes` is explicitly sent as `"inputBytes"`. Use `System.Text.Json.JsonSerializerOptions` with `PropertyNamingPolicy = JsonNamingPolicy.CamelCase`, or use explicit `[JsonPropertyName("inputBytes")]` attributes on the DTO.
 
-Root Cause:
-The Android app expects lowerCamelCase JSON keys in the TCP/TLS session setup response from the PC receiver. The property `inputBytes` is either missing from the response DTO/JSON payload, or it is being serialized in PascalCase (`InputBytes`) instead of lower camelCase.
+2. Fix Missing Dependency:
+   In `src/DriveBench.Receiver/DriveBench.Receiver.csproj`, add the missing QRCoder NuGet package reference inside the `<ItemGroup>`:
+   <PackageReference Include="QRCoder" Version="1.6.0" />
 
-Task:
-1. Search all `.cs` source files under `src/` (especially `RemoteReceiver.cs` and any session/protocol DTO files in `src/DriveBench.Transport` or `src/DriveBench.Core`).
-2. Locate where the session setup JSON response is constructed or serialized when completing the pairing handshake with the phone.
-3. Ensure the JSON response explicitly includes the `inputBytes` field/property set to the expected byte length (or lowerCamelCase `inputBytes`).
-4. If using `System.Text.Json.JsonSerializer`, ensure `JsonNamingPolicy.CamelCase` is applied or add `[JsonPropertyName("inputBytes")]` attributes to the response properties (`status`, `sessionKey`, `inputPort`, `inputBytes`, `sequence`).
-5. If using raw/interpolated JSON strings, ensure the literal key is `"inputBytes"`.
-6. Return ONLY a valid JSON object mapping updated relative file paths to their complete updated source text in the format:
-{"path/to/file": "file content..."}
+3. Fix the GitHub Actions Workflow (Missing Controller Driver & AI Loop):
+   In `.github/workflows/build-windows.yml`:
+   - Modify the Publish step(s) to explicitly run `dotnet publish` on BOTH `src/DriveBench.Host/DriveBench.Host.csproj` AND `src/DriveBench.Receiver/DriveBench.Receiver.csproj`, outputting both to the `./publish/` directory.
+   - In the "Sync Git Remote and Commit Auto-Fixes" bash step, add a command to aggressively wipe all `obj/` and `bin/` directories (e.g., `find src -type d \( -name "bin" -o -name "obj" \) -exec rm -rf {} + 2>/dev/null || true`) right BEFORE `git add src/` to prevent the AI from accidentally committing compiler-generated garbage files.
+
+Return the completely updated code for all modified files. Do not change standard architecture or unrelated using directives.
