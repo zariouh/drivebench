@@ -1,3 +1,5 @@
+using System;
+
 namespace DriveBench.Transport;
 
 /// <summary>Local processing times only. No payloads, credentials or raw network addresses.</summary>

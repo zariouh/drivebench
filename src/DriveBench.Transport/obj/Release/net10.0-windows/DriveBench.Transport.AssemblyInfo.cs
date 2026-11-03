@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DriveBench.Transport")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.3.8.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.3.8+da8f52b0b14c851d389f675f83adcb5dd324f0c6")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.3.8+cb9bc09a8f9cf6d638c135d1175bc856d18ee097")]
 [assembly: System.Reflection.AssemblyProductAttribute("DriveBench.Transport")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DriveBench.Transport")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.3.8.0")]
