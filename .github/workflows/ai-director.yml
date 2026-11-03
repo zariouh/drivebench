@@ -43,7 +43,7 @@ jobs:
           code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True)
           context = ''
           for filepath in code_files:
-              if '.github' not in filepath and 'build' not in filepath:
+              if '.github' not in filepath and 'build' not in filepath and '.gradle' not in filepath:
                   with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
                       context += f'\n--- FILE: {filepath} ---\n' + f.read()
 
