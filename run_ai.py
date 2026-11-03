@@ -3,7 +3,6 @@ from google import genai
 
 client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
-# Read instructions directly from AI_COMMAND.txt
 command_file = 'AI_COMMAND.txt'
 if not os.path.exists(command_file):
     raise Exception(f"Missing {command_file}! Please create this file in the repo root with your instructions.")
@@ -16,14 +15,14 @@ if not prompt:
 
 print(f"Executing AI Command from {command_file}:\n{prompt}\n")
 
-code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True)
+code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True) + glob.glob('**/*.java', recursive=True)
 context = ''
 for filepath in code_files:
-    if '.github' not in filepath and 'build' not in filepath and '.gradle' not in filepath:
+    if '.github' not in filepath and 'build' not in filepath and '.gradle' not in filepath and 'bin' not in filepath and 'obj' not in filepath:
         with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
             context += f'\n--- FILE: {filepath} ---\n' + f.read()
 
-full_prompt = f"""You are an expert C# and Kotlin developer modifying DriveBench.
+full_prompt = f"""You are an expert full-stack cross-platform developer (C# & Kotlin) modifying DriveBench.
 Instructions: {prompt}
 
 Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
@@ -32,7 +31,6 @@ Format: {{"path/to/file": "file content..."}}
 Existing Codebase:
 {context}"""
 
-# Fallback model list directly matched to your available Google AI Studio models
 models_to_try = [
     'gemini-3.8-flash',
     'gemini-3.6-flash',
