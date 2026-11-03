@@ -45,11 +45,16 @@ jobs:
           name: drivebench-windows-x64
           path: ./drivebench-wifi-windows-x64.zip
 
-      - name: Set up Python for Auto-Fix
+      - name: Set up Python with Cache
         if: steps.build_step.outcome == 'failure'
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Gemini SDK
+        if: steps.build_step.outcome == 'failure'
+        run: pip install google-genai
 
       - name: Auto-Fix Windows Build Error with Gemini
         if: steps.build_step.outcome == 'failure'
@@ -57,7 +62,6 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          pip install google-genai
           cat << 'EOF' > fix_build.py
           import os, glob, json, re, time
           from google import genai
@@ -83,7 +87,7 @@ jobs:
           {error_log}
           =======================
 
-          Fix all compilation errors in the source code.
+          Fix all compilation errors in the source code (missing namespaces, using directives, math utilities).
           Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
           Format: {{"path/to/file": "file content..."}}
 
