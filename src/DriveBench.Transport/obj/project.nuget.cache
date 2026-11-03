@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "dgSpecHash": "o6BiJ7ls1QE=",
+  "success": true,
+  "projectFilePath": "D:\\a\\drivebench\\drivebench\\src\\DriveBench.Transport\\DriveBench.Transport.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\runneradmin\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.14\\microsoft.netcore.app.runtime.win-x64.10.0.14.nupkg.sha512",
+    "C:\\Users\\runneradmin\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.14\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.14.nupkg.sha512",
+    "C:\\Users\\runneradmin\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.14\\microsoft.aspnetcore.app.runtime.win-x64.10.0.14.nupkg.sha512"
+  ],
+  "logs": []
+}

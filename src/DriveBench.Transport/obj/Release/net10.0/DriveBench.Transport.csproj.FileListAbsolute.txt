@@ -1,0 +1,6 @@
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.csproj.AssemblyReference.cache
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.GeneratedMSBuildEditorConfig.editorconfig
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.AssemblyInfoInputs.cache
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.AssemblyInfo.cs
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.csproj.CoreCompileInputs.cache
+D:\a\drivebench\drivebench\src\DriveBench.Transport\obj\Release\net10.0\DriveBench.Transport.sourcelink.json
