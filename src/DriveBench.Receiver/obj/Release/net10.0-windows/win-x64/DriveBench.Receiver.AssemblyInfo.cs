@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DriveBench.Receiver")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.3.8.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.3.8+ff4bd7178547ed5d6c5fc4ee89a4e3f2ec74e7bf")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.3.8+e15ffa5b4f37c3ddfa922935ee3c06cbc7fe71ea")]
 [assembly: System.Reflection.AssemblyProductAttribute("DriveBench.Receiver")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DriveBench.Receiver")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.3.8.0")]
