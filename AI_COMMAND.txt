@@ -1,7 +1,17 @@
-The Windows build failed with error NETSDK1045: The current .NET SDK (8.0.427) does not support targeting .NET 10.0.
+You are an automated C# / .NET bug fixing agent for DriveBench.
+
+Context:
+The Android client fails during TCP/TLS pairing setup with the following runtime error:
+"SESSION_SETUP: JSONException: No value for inputBytes"
+
+Root Cause:
+The Android app expects lowerCamelCase JSON keys in the TCP/TLS session setup response from the PC receiver. The property `inputBytes` is either missing from the response DTO/JSON payload, or it is being serialized in PascalCase (`InputBytes`) instead of lower camelCase.
 
 Task:
-1. Scan all .csproj files in the codebase (src/DriveBench.Core/DriveBench.Core.csproj, src/DriveBench.Transport/DriveBench.Transport.csproj, src/DriveBench.Receiver/DriveBench.Receiver.csproj).
-2. Change all <TargetFramework> and <TargetFrameworks> nodes targeting 'net10.0' or 'net10.0-windows' to 'net8.0' or 'net8.0-windows' respectively.
-3. Ensure <Nullable>enable</Nullable> is included in the main <PropertyGroup> of each .csproj file.
-4. Return ONLY a valid JSON object mapping relative file paths to their complete updated text contents.
+1. Search all `.cs` source files under `src/` (especially `RemoteReceiver.cs` and any session/protocol DTO files in `src/DriveBench.Transport` or `src/DriveBench.Core`).
+2. Locate where the session setup JSON response is constructed or serialized when completing the pairing handshake with the phone.
+3. Ensure the JSON response explicitly includes the `inputBytes` field/property set to the expected byte length (or lowerCamelCase `inputBytes`).
+4. If using `System.Text.Json.JsonSerializer`, ensure `JsonNamingPolicy.CamelCase` is applied or add `[JsonPropertyName("inputBytes")]` attributes to the response properties (`status`, `sessionKey`, `inputPort`, `inputBytes`, `sequence`).
+5. If using raw/interpolated JSON strings, ensure the literal key is `"inputBytes"`.
+6. Return ONLY a valid JSON object mapping updated relative file paths to their complete updated source text in the format:
+{"path/to/file": "file content..."}
