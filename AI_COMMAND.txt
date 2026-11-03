@@ -1,1 +1,7 @@
-Add 'using System.IO;' to the top of src/DriveBench.Core/Protocol.cs to resolve the missing InvalidDataException error.
+The Windows build failed with error NETSDK1045: The current .NET SDK (8.0.427) does not support targeting .NET 10.0.
+
+Task:
+1. Scan all .csproj files in the codebase (src/DriveBench.Core/DriveBench.Core.csproj, src/DriveBench.Transport/DriveBench.Transport.csproj, src/DriveBench.Receiver/DriveBench.Receiver.csproj).
+2. Change all <TargetFramework> and <TargetFrameworks> nodes targeting 'net10.0' or 'net10.0-windows' to 'net8.0' or 'net8.0-windows' respectively.
+3. Ensure <Nullable>enable</Nullable> is included in the main <PropertyGroup> of each .csproj file.
+4. Return ONLY a valid JSON object mapping relative file paths to their complete updated text contents.
