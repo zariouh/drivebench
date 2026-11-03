@@ -8,6 +8,8 @@ on:
 jobs:
   build-android:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Code
@@ -20,22 +22,107 @@ jobs:
           distribution: 'temurin'
 
       - name: Build Debug APK
+        id: build_step
+        continue-on-error: true
         run: |
           cd android
-          
-          # Fix Windows line endings (CRLF -> LF)
           sed -i -e 's/\r$//' gradlew
           chmod +x gradlew
-          
-          # Delete local properties and clean cache
           rm -f local.properties
-          rm -rf .gradle build app/build
-          
-          ./gradlew clean assembleDebug
+          ./gradlew assembleDebug 2>&1 | tee build_error.log
 
       - name: Upload APK Artifact
+        if: steps.build_step.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: drivebench-android-apk
-          path: |
-            android/app/build/outputs/apk/debug/*.apk
+          path: android/app/build/outputs/apk/debug/*.apk
+
+      - name: Set up Python for Auto-Fix
+        if: steps.build_step.outcome == 'failure'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Auto-Fix Android Build Error with Gemini
+        if: steps.build_step.outcome == 'failure'
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          pip install google-genai
+          cat << 'EOF' > fix_build.py
+          import os, glob, json, re, time
+          from google import genai
+
+          client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
+
+          error_log = ""
+          log_path = "android/build_error.log"
+          if os.path.exists(log_path):
+              with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                  error_log = f.read()
+
+          code_files = glob.glob('**/*.kt', recursive=True) + glob.glob('**/*.java', recursive=True) + glob.glob('**/*.gradle*', recursive=True)
+          context = ''
+          for filepath in code_files:
+              if '.github' not in filepath and 'build' not in filepath and '.gradle' not in filepath:
+                  with open(filepath, 'r', encoding='utf-8', errors='ignore') as f:
+                      context += f'\n--- FILE: {filepath} ---\n' + f.read()
+
+          full_prompt = f"""You are an automated Android Kotlin/Gradle build fixing agent.
+          The Android build failed with the following error output:
+          
+          === BUILD ERROR LOG ===
+          {error_log}
+          =======================
+
+          Fix all compilation and configuration errors in the source code.
+          Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
+          Format: {{"path/to/file": "file content..."}}
+
+          Existing Codebase:
+          {context}"""
+
+          models_to_try = [
+              'gemini-3.8-flash',
+              'gemini-3.6-flash',
+              'gemini-3.5-flash-lite',
+              'gemini-3.1-flash-lite',
+              'gemini-3-flash-preview'
+          ]
+
+          response = None
+          for model_name in models_to_try:
+              try:
+                  response = client.models.generate_content(model=model_name, contents=full_prompt)
+                  if response:
+                      break
+              except Exception:
+                  time.sleep(2)
+
+          if response:
+              raw = response.text.strip()
+              if raw.startswith('```'):
+                  raw = re.sub(r'^```[a-z]*\n|```$', '', raw, flags=re.MULTILINE).strip()
+              
+              try:
+                  files = json.loads(raw)
+                  for path, content in files.items():
+                      os.makedirs(os.path.dirname(path), exist_ok=True)
+                      with open(path, 'w', encoding='utf-8') as f:
+                          f.write(content)
+                  print("Applied AI auto-fix to Android codebase.")
+              except Exception as e:
+                  print(f"Error parsing AI response: {e}")
+          EOF
+          python fix_build.py
+
+      - name: Commit Auto-Fixes
+        if: steps.build_step.outcome == 'failure'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-Fix (Android): Resolve build compilation error"
+
+      - name: Fail Job to Trigger Retry
+        if: steps.build_step.outcome == 'failure'
+        run: exit 1
