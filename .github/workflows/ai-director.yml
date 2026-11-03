@@ -2,11 +2,6 @@ name: AI Director - Auto Code & Build
 
 on:
   workflow_dispatch:
-    inputs:
-      prompt:
-        description: 'Instructions for Gemini (e.g. Implement Fixes A, B, and C)'
-        required: true
-        default: 'Implement Fixes A, B, and C in SessionCoordinator.cs, Admission.cs, and SenderHealth.kt'
 
 jobs:
   ai-code-and-commit:
@@ -31,14 +26,25 @@ jobs:
       - name: Run Gemini Coder Script
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          USER_PROMPT: ${{ github.event.inputs.prompt }}
         run: |
           cat << 'EOF' > run_ai.py
           import os, glob, json, re, time
           from google import genai
 
           client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
-          prompt = os.environ['USER_PROMPT']
+
+          # Read instructions directly from AI_COMMAND.txt
+          command_file = 'AI_COMMAND.txt'
+          if not os.path.exists(command_file):
+              raise Exception(f"Missing {command_file}! Please create this file in the repo root with your instructions.")
+
+          with open(command_file, 'r', encoding='utf-8') as f:
+              prompt = f.read().strip()
+
+          if not prompt:
+              raise Exception(f"{command_file} is empty! Please write your prompt inside the file.")
+
+          print(f"Executing AI Command from {command_file}:\n{prompt}\n")
 
           code_files = glob.glob('**/*.cs', recursive=True) + glob.glob('**/*.kt', recursive=True)
           context = ''
@@ -90,4 +96,4 @@ jobs:
       - name: Commit and Push AI Changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "AI Director: ${{ github.event.inputs.prompt }}"
+          commit_message: "AI Director: Executed command from AI_COMMAND.txt"
