@@ -67,6 +67,7 @@ jobs:
           cat << 'EOF' > fix_build.py
           import os, glob, json, re, time
           from google import genai
+          from google.genai import types
 
           client = genai.Client(api_key=os.environ['GEMINI_API_KEY'])
 
@@ -89,8 +90,8 @@ jobs:
           {error_log}
           =======================
 
-          Fix all compilation errors in the source code (missing namespaces, using directives, System.Threading.Tasks, System.Threading).
-          Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
+          Fix all compilation errors in the source code (missing namespaces, using directives, System, System.IO, System.Threading.Tasks, System.Threading, System.Linq).
+          Return ONLY a valid JSON object mapping updated relative file paths to their complete updated source text.
           Format: {{"path/to/file": "file content..."}}
 
           Existing Codebase:
@@ -104,13 +105,22 @@ jobs:
               'gemini-3-flash-preview'
           ]
 
+          config = types.GenerateContentConfig(
+              response_mime_type="application/json"
+          )
+
           response = None
           for model_name in models_to_try:
               try:
-                  response = client.models.generate_content(model=model_name, contents=full_prompt)
+                  response = client.models.generate_content(
+                      model=model_name,
+                      contents=full_prompt,
+                      config=config
+                  )
                   if response:
                       break
-              except Exception:
+              except Exception as e:
+                  print(f"[{model_name}] Error: {e}")
                   time.sleep(2)
 
           if response:
@@ -126,7 +136,7 @@ jobs:
                           f.write(content)
                   print("Applied AI auto-fix to Windows codebase.")
               except Exception as e:
-                  print(f"Error parsing AI response: {e}")
+                  print(f"Error parsing AI response: {e}\nRaw response:\n{raw}")
           EOF
           python fix_build.py
 
@@ -136,8 +146,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git rebase origin/main || git rebase --abort
           git add src/
-          git diff-index --quiet HEAD || git commit -m "Auto-Fix (Windows): Resolve build compilation error"
-          git push origin main
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Auto-Fix (Windows): Resolve build compilation error"
+            git fetch origin main
+            git rebase origin/main || git rebase --skip
+            git push origin main
+          else
+            print "No C# code modifications to commit."
+          fi
