@@ -1,6 +1,9 @@
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -63,7 +66,6 @@ public partial class MainWindow : Window
                 var status = HostStatus.Decode(bytes);
                 if (status.CompletedTicks <= Interlocked.Read(ref _lastCompletedTick)) continue;
                 Interlocked.Exchange(ref _lastCompletedTick, status.CompletedTicks);
-                // Check the actual report progress timestamp, not merely a newly delivered pipe message.
                 Interlocked.Exchange(ref _lastHostProgress, status.CompletedTicks);
                 lock (_statusGate) _latest = status;
                 _ready = true;
@@ -149,7 +151,7 @@ public partial class MainWindow : Window
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         _closing = true; _holding = _ready = false; _sendTimer.Stop(); _lifetime.Cancel();
-        _pipe?.Dispose(); // Host sees EOF and submits neutral before disposing its device.
+        _pipe?.Dispose();
         try { if (_host is { HasExited: false } && !_host.WaitForExit(250)) _host.Kill(entireProcessTree: true); } catch { }
     }
 }

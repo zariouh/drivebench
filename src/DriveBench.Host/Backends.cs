@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 using DriveBench.Core;
 using Nefarius.ViGEm.Client;
@@ -48,7 +49,7 @@ internal sealed class VigemBackend : IBackend
                 state.Gamepad.RightTrigger == report.Throttle && state.Gamepad.Buttons == 0 &&
                 state.Gamepad.LeftY == 0 && state.Gamepad.RightX == 0 && state.Gamepad.RightY == 0;
         }
-        catch { return false; } // Enumeration/readback failure is shown, never confused with a matched report.
+        catch { return false; }
     }
     public void Dispose()
     {
