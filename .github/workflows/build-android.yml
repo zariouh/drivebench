@@ -13,12 +13,6 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Auto-Unzip Source If Present
-        run: |
-          if [ -f "source.zip" ]; then
-            unzip -o source.zip
-          fi
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -27,27 +21,21 @@ jobs:
 
       - name: Build Debug APK
         run: |
-          GRADLEW_PATH=$(find . -name gradlew -type f | head -n 1)
-          if [ -z "$GRADLEW_PATH" ]; then
-            echo "Error: gradlew file not found in repository!"
-            exit 1
-          fi
-          GRADLE_DIR=$(dirname "$GRADLEW_PATH")
-          echo "Found gradlew in $GRADLE_DIR"
-          cd "$GRADLE_DIR"
+          cd android
           
           # Fix Windows line endings (CRLF -> LF)
           sed -i -e 's/\r$//' gradlew
           chmod +x gradlew
           
-          # Delete local.properties if it was accidentally zipped from a PC
+          # Delete local properties and clean cache
           rm -f local.properties
+          rm -rf .gradle build app/build
           
-          ./gradlew assembleDebug
+          ./gradlew clean assembleDebug
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: drivebench-android-apk
           path: |
-            **/app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/debug/*.apk
