@@ -1,0 +1,4 @@
+Kotlin standard library 2.1.20
+Copyright 2010-2025 JetBrains s.r.o. and Kotlin contributors.
+Licensed under the Apache License, Version 2.0; see KOTLIN-LICENSE.txt.
+Source: https://github.com/JetBrains/kotlin/tree/v2.1.20
