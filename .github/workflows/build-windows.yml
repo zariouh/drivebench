@@ -23,17 +23,24 @@ jobs:
           if (Test-Path "src/DriveBench.Core/obj") { Remove-Item -Recurse -Force "src/DriveBench.Core/obj" }
           if (Test-Path "src/DriveBench.Receiver/obj") { Remove-Item -Recurse -Force "src/DriveBench.Receiver/obj" }
           if (Test-Path "src/DriveBench.Transport/obj") { Remove-Item -Recurse -Force "src/DriveBench.Transport/obj" }
+          if (Test-Path "src/DriveBench.Core/bin") { Remove-Item -Recurse -Force "src/DriveBench.Core/bin" }
+          if (Test-Path "src/DriveBench.Receiver/bin") { Remove-Item -Recurse -Force "src/DriveBench.Receiver/bin" }
+          if (Test-Path "src/DriveBench.Transport/bin") { Remove-Item -Recurse -Force "src/DriveBench.Transport/bin" }
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
+      - name: Pin .NET SDK Version via global.json
+        run: |
+          dotnet new globaljson --sdk-version 8.0.427 --roll-forward latestFeature --force
+
       - name: Publish Windows Receiver
         id: build_step
         continue-on-error: true
         run: |
-          dotnet publish src/DriveBench.Receiver/DriveBench.Receiver.csproj -c Release -r win-x64 --self-contained true -o ./publish/ 2>&1 | Tee-Object -FilePath build_error.log
+          dotnet publish src/DriveBench.Receiver/DriveBench.Receiver.csproj -c Release -f net8.0-windows -r win-x64 --self-contained true -o ./publish/ 2>&1 | Tee-Object -FilePath build_error.log
 
       - name: Compress Release ZIP
         if: steps.build_step.outcome == 'success'
@@ -131,7 +138,6 @@ jobs:
                   raw = re.sub(r'^```[a-z]*\n|```$', '', raw, flags=re.MULTILINE).strip()
               
               try:
-                  # strict=False allows parsing unescaped control characters/newlines inside JSON strings
                   files = json.loads(raw, strict=False)
                   for path, content in files.items():
                       os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -147,17 +153,13 @@ jobs:
         if: steps.build_step.outcome == 'failure'
         shell: bash
         run: |
-          # 1. Clean up temporary script and log files
-          rm -f build_error.log fix_build.py
+          rm -f build_error.log fix_build.py global.json
 
-          # 2. Configure Git identity
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # 3. Stage ONLY source code files (.cs and .csproj)
           git add "src/**/*.cs" "src/**/*.csproj"
 
-          # 4. If changes exist, commit, wipe working-tree build clutter, rebase, and push
           if ! git diff-index --quiet HEAD; then
             git commit -m "Auto-Fix (Windows): Resolve build compilation error"
             git reset --hard HEAD
