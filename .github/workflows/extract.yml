@@ -1,0 +1,29 @@
+name: Extract Source ZIP to Repository
+
+on:
+  workflow_dispatch:
+
+jobs:
+  extract-and-commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract source.zip
+        run: |
+          if [ -f "source.zip" ]; then
+            unzip -o source.zip
+            rm source.zip
+          else
+            echo "Error: source.zip not found in repository root!"
+            exit 1
+          fi
+
+      - name: Commit Extracted Files
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Unpack source.zip into repository"
