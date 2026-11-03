@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Clean Temporary Build Artifacts
         run: |
@@ -54,7 +56,7 @@ jobs:
 
       - name: Install Gemini SDK
         if: steps.build_step.outcome == 'failure'
-        run: pip install google-genai
+        run: pip install -r requirements.txt
 
       - name: Auto-Fix Windows Build Error with Gemini
         if: steps.build_step.outcome == 'failure'
@@ -87,7 +89,7 @@ jobs:
           {error_log}
           =======================
 
-          Fix all compilation errors in the source code (missing namespaces, using directives, math utilities).
+          Fix all compilation errors in the source code (missing namespaces, using directives, System.Threading.Tasks, System.Threading).
           Return ONLY a JSON mapping of updated relative file paths to their complete updated source text.
           Format: {{"path/to/file": "file content..."}}
 
@@ -128,9 +130,14 @@ jobs:
           EOF
           python fix_build.py
 
-      - name: Commit Auto-Fixes
+      - name: Sync Git Remote and Commit Auto-Fixes
         if: steps.build_step.outcome == 'failure'
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          file_pattern: 'src/**/*.cs src/**/*.csproj'
-          commit_message: "Auto-Fix (Windows): Resolve build compilation error"
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git rebase origin/main || git rebase --abort
+          git add src/
+          git diff-index --quiet HEAD || git commit -m "Auto-Fix (Windows): Resolve build compilation error"
+          git push origin main
