@@ -117,19 +117,20 @@ jobs:
                       contents=full_prompt,
                       config=config
                   )
-                  if response:
+                  if response and response.text:
                       break
               except Exception as e:
                   print(f"[{model_name}] Error: {e}")
                   time.sleep(2)
 
-          if response:
+          if response and response.text:
               raw = response.text.strip()
               if raw.startswith('```'):
                   raw = re.sub(r'^```[a-z]*\n|```$', '', raw, flags=re.MULTILINE).strip()
               
               try:
-                  files = json.loads(raw)
+                  # strict=False allows parsing unescaped control characters/newlines inside JSON strings
+                  files = json.loads(raw, strict=False)
                   for path, content in files.items():
                       os.makedirs(os.path.dirname(path), exist_ok=True)
                       with open(path, 'w', encoding='utf-8') as f:
@@ -144,14 +145,21 @@ jobs:
         if: steps.build_step.outcome == 'failure'
         shell: bash
         run: |
+          # 1. Clean up temporary script and log files
+          rm -f build_error.log fix_build.py
+
+          # 2. Configure Git identity
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/
+
+          # 3. Stage ONLY source code files (.cs and .csproj)
+          git add "src/**/*.cs" "src/**/*.csproj"
+
+          # 4. If changes exist, commit, rebase smoothly, and push
           if ! git diff-index --quiet HEAD; then
             git commit -m "Auto-Fix (Windows): Resolve build compilation error"
-            git fetch origin main
-            git rebase origin/main || git rebase --skip
+            git pull --rebase origin main
             git push origin main
           else
-            print "No C# code modifications to commit."
+            echo "No C# source code modifications to commit."
           fi
